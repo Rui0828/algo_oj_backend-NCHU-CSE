@@ -98,7 +98,7 @@ class EditUserSerializer(serializers.Serializer):
 
 
 class EditUserProfileSerializer(serializers.Serializer):
-    real_name = serializers.CharField(max_length=32, allow_null=True, required=False)
+    # real_name = serializers.CharField(max_length=32, allow_null=True, required=False)
     avatar = serializers.CharField(max_length=256, allow_blank=True, required=False)
     blog = serializers.URLField(max_length=256, allow_blank=True, required=False)
     mood = serializers.CharField(max_length=256, allow_blank=True, required=False)

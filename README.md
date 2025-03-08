@@ -1,85 +1,48 @@
-# OnlineJudge 2.0
+# 中興大學 **演算法** 課程作業繳交平台 (Backend)
+此平台基於 [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge) 下去修改，新增幾個我們課程中會用到的功能。
 
-[![Python](https://img.shields.io/badge/python-3.8.0-blue.svg?style=flat-square)](https://www.python.org/downloads/release/python-362/)
-[![Django](https://img.shields.io/badge/django-3.2.9-blue.svg?style=flat-square)](https://www.djangoproject.com/)
-[![Django Rest Framework](https://img.shields.io/badge/django_rest_framework-3.12.0-blue.svg?style=flat-square)](http://www.django-rest-framework.org/)
-[![Build Status](https://travis-ci.org/QingdaoU/OnlineJudge.svg?branch=master)](https://travis-ci.org/QingdaoU/OnlineJudge)
+1. 將 container 設定 SSH 的步驟腳本化，新增在 DockerFile 中。 (方便我們修改內部檔案)
+2. 每次作業都會透過執行的 time 或 memory 進行排序，我們透過排名來給予作業成績。
+3. 作業使用 Java 撰寫並禁用所有 import 功能，但可以特例開放。
+4. 我們用不到 Special Judge，因此把它改成透過 json 的格式設定 作業 Deadline、允許 import 、排名方式。
+5. Judge result 新增一個 `Expired` ，若遲交作業，將回傳此狀態。
 
-> #### An onlinejudge system based on Python and Vue. [Demo](https://qduoj.com)
+---
 
-[中文文档](README-CN.md)
-
-## Overview
-
-+ Based on Docker; One-click deployment
-+ Separated backend and frontend; Modular programming; Micro service
-+ ACM/OI rule support; realtime/non-realtime rank support
-+ Amazing charting and visualization
-+ Template-problem support
-+ More reasonable permission control
-+ Multi-language support: `C`, `C++`, `Java`, `Python2`, `Python3`
-+ Markdown & MathJax support
-+ Contest participants IP limit(CIDR)
-
-Main modules are available below:
-
+原版 QDUOJ:
 + Backend(Django): [https://github.com/QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge)
 + Frontend(Vue): [https://github.com/QingdaoU/OnlineJudgeFE](https://github.com/QingdaoU/OnlineJudgeFE)
 + Judger Sandbox(Seccomp): [https://github.com/QingdaoU/Judger](https://github.com/QingdaoU/Judger)
 + JudgeServer(A wrapper for Judger): [https://github.com/QingdaoU/JudgeServer](https://github.com/QingdaoU/JudgeServer)
 
-## Installation
+## 透過 time 或 memory 進行排序
+- 每個使用者會擇優出 time/memory 最好的版本進行排名。
 
-Follow me:  [https://github.com/QingdaoU/OnlineJudgeDeploy/tree/2.0](https://github.com/QingdaoU/OnlineJudgeDeploy/tree/2.0)
+![Image](https://i.imgur.com/Kr2pufw.png)
+![Image](https://i.imgur.com/FVAjkIp.png)
 
-## Documents
 
-[http://opensource.qduoj.com/](http://opensource.qduoj.com/)
+## java 中禁用 import (可以特例開放)
+- 若繳交的 code 中包含非允需 import 會回傳 `Compile Error`。
 
-## Screenshots
+![Image](https://i.imgur.com/jinUa2m.png)
 
-### Frontend:
 
-![problem-list](https://user-images.githubusercontent.com/20637881/33372506-402022e4-d539-11e7-8e64-6656f8ceb75a.png)
+##  Special Judge 改成拿來做特殊設定 
+- 用 JSON 格式設定
 
-![problem-details](https://user-images.githubusercontent.com/20637881/33372507-4061a782-d539-11e7-8835-076ddae6b529.png)
+![Image](https://i.imgur.com/oQIl1XL.png)
 
-![statistic-info](https://user-images.githubusercontent.com/20637881/33372508-40a0c6ce-d539-11e7-8d5e-024541b76750.png)
+- `"expire_time": "2025-3-28T14:00:00"` 設定作業 deadline (default: 無 deadline)  
+- `"allowed_imports": ["java.util.Scanner"]` 設定允許的 import (default: 禁用全部)  
+    - `java.util.*` 代表所有 java.util. 皆可使用
+    - `*` 全部開放
+- `"rank_type": "time"` 設定排名類型 `time` 或 `memory` (default: time)
 
-![contest-list](https://user-images.githubusercontent.com/20637881/33372509-40d880dc-d539-11e7-9eba-1f08dcb6b9a0.png)
 
-You can control the menu and chart status in rankings.
+## 遲交作業，將回傳 `Expired` 狀態
+![Image](https://i.imgur.com/p3RdJtm.png)
 
-![acm-rankings](https://user-images.githubusercontent.com/20637881/33372510-41117f68-d539-11e7-9947-70e60bad3cf2.png)
-
-![oi-rankings](https://user-images.githubusercontent.com/20637881/33372511-41d406fa-d539-11e7-9947-7a2a088785b0.png)
-
-![status](https://user-images.githubusercontent.com/20637881/33372512-420ba240-d539-11e7-8645-594cac4a0b78.png)
-
-![status-details](https://user-images.githubusercontent.com/20637881/33365523-787bd0ea-d523-11e7-953f-dacbf7a506df.png)
-
-![user-home](https://user-images.githubusercontent.com/20637881/33365521-7842d808-d523-11e7-84c1-2e2aa0079f32.png)
-
-### Admin: 
-
-![admin-users](https://user-images.githubusercontent.com/20637881/33372516-42c34fda-d539-11e7-9f4e-5109477f83be.png)
-
-![judge-server](https://user-images.githubusercontent.com/20637881/33372517-42faef9e-d539-11e7-9f17-df9be3583900.png)
-
-![create-problem](https://user-images.githubusercontent.com/20637881/33372513-42472162-d539-11e7-8659-5497bf52dbea.png)
-
-![create-contest](https://user-images.githubusercontent.com/20637881/33372514-428ab922-d539-11e7-8f68-da55dedf3ad3.png)
-
-## Browser Support
-
-Modern browsers(chrome, firefox) and Internet Explorer 10+.
-
-## Thanks
-
-+ I'd appreciate a star if you find this helpful.
-+ Thanks to everyone that contributes to this project.
-+ Special thanks to [heb1c](https://github.com/hebicheng), who has given us a lot of suggestions.
 
 ## License
-
 [MIT](http://opensource.org/licenses/MIT)

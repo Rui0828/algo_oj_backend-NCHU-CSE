@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from ..views.oj import (ApplyResetPasswordAPI, ResetPasswordAPI,
-                        UserChangePasswordAPI, UserRegisterAPI, UserChangeEmailAPI,
+                        UserChangePasswordAPI, UserRegisterAPI, UserChangeEmailAPI, 
                         UserLoginAPI, UserLogoutAPI, UsernameOrEmailCheck,
                         AvatarUploadAPI, TwoFactorAuthAPI, UserProfileAPI,
                         UserRankAPI, CheckTFARequiredAPI, SessionManagementAPI,

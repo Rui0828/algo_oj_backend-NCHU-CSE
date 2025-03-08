@@ -17,6 +17,9 @@ from submission.models import JudgeStatus, Submission
 from utils.cache import cache
 from utils.constants import CacheKey
 
+import pytz
+from datetime import datetime
+
 logger = logging.getLogger(__name__)
 
 
@@ -125,12 +128,172 @@ class JudgeDispatcher(DispatcherBase):
     def judge(self):
         language = self.submission.language
         sub_config = list(filter(lambda item: language == item["name"], SysOptions.languages))[0]
-        spj_config = {}
-        if self.problem.spj_code:
-            for lang in SysOptions.spj_languages:
-                if lang["name"] == self.problem.spj_language:
-                    spj_config = lang["spj"]
-                    break
+        
+        
+        # ✅ 解析 spj_code 存储的 JSON 数据（如果有值）
+        expire_time, allowed_imports = None, None  # None 表示 "未设置"
+
+        if self.problem.spj_code:  # ✅ 只有 SPJ 代码不为空时才进行检查
+            try:
+                spj_config_data = json.loads(self.problem.spj_code)  # 解析 `spj_code` 里的 JSON
+                expire_time = spj_config_data.get("expire_time", None)  # 获取截止时间
+                allowed_imports = spj_config_data.get("allowed_imports", None)  # 获取允许的 import (可选)
+            except:
+                self.problem.spj_code = None
+
+        if expire_time:
+            # ✅ 获取台湾时区
+            taipei_tz = pytz.timezone("Asia/Taipei")
+
+            try:
+                # ✅ 解析 JSON 里的 expire_time（无时区）
+                expire_time_dt = datetime.strptime(expire_time, "%Y-%m-%dT%H:%M:%S")
+
+                # ✅ 设定 expire_time 为台湾时区
+                expire_time_dt = taipei_tz.localize(expire_time_dt)
+
+                # ✅ 获取当前时间（台湾时区）
+                now_time = datetime.now(taipei_tz)
+
+                # ✅ 比较当前时间是否超过 `expire_time`
+                if now_time > expire_time_dt:
+                    self.submission.result = JudgeStatus.EXPIRED
+                    self.submission.statistic_info = {"err_info": "Submission deadline has passed."}
+                    self.submission.save(update_fields=["result", "statistic_info"])
+                    return
+            except ValueError:
+                # ✅ 处理 `expire_time` 解析失败（格式错误）
+                self.submission.result = JudgeStatus.SYSTEM_ERROR
+                self.submission.statistic_info = {"err_info": "Invalid expire_time format."}
+                self.submission.save(update_fields=["result", "statistic_info"])
+                return
+
+        # ✅ 处理 Java `import` 限制
+        if self.submission.language == "Java":
+            # ✅ 首先处理 import 语句
+            for line in self.submission.code.split("\n"):
+                words = line.split()
+                if words and words[0] == "import":  # ✅ 确保至少有两个单词
+                    if len(words) < 2:  # ❌ 只包含 "import" 关键字，报错
+                        self.submission.result = JudgeStatus.COMPILE_ERROR
+                        self.submission.statistic_info = {
+                            "err_info": "Invalid import statement."
+                        }
+                        self.submission.save(update_fields=["result", "statistic_info"])
+                        return
+
+                    imported_lib = words[1].strip(";")  # ✅ 现在可以安全获取导入的包名
+
+                    if self.problem.spj_code:  # ✅ 只有 `spj_code` 存在时才检查 `allowed_imports`
+                        if allowed_imports is None:  # ✅ 没有定义 `allowed_imports`，禁止所有 `import`
+                            self.submission.result = JudgeStatus.COMPILE_ERROR
+                            self.submission.statistic_info = {
+                                "err_info": f"Import '{imported_lib}' is not allowed (all imports disabled)."
+                            }
+                            self.submission.save(update_fields=["result", "statistic_info"])
+                            return
+
+                        # ✅ 处理 `allowed_imports` 里的 `*`
+                        allowed = False
+                        for rule in allowed_imports:
+                            if rule == "*":  # ✅ 处理 `*` 这种情况
+                                allowed = True
+                                break
+                            elif rule.endswith(".*"):  # ✅ 处理 `java.util.*` 这种情况
+                                package_prefix = rule[:-1]  # 去掉 `*`
+                                if imported_lib.startswith(package_prefix):  # ✅ 允许 `java.util.XXX`
+                                    allowed = True
+                                    break
+                            elif imported_lib == rule:  # ✅ 处理 `java.util.Scanner` 这种具体类
+                                allowed = True
+                                break
+
+                        if not allowed:
+                            self.submission.result = JudgeStatus.COMPILE_ERROR
+                            self.submission.statistic_info = {
+                                "err_info": f"Import '{imported_lib}' is not allowed."
+                            }
+                            self.submission.save(update_fields=["result", "statistic_info"])
+                            return
+                    else:
+                        # ✅ 如果 `spj_code` 为空，则禁用所有 `import`
+                        self.submission.result = JudgeStatus.COMPILE_ERROR
+                        self.submission.statistic_info = {
+                            "err_info": f"Import '{imported_lib}' is not allowed (all imports disabled)."
+                        }
+                        self.submission.save(update_fields=["result", "statistic_info"])
+                        return
+            
+            # ✅ 检查完整限定类名的使用 (如 java.util.HashSet)
+            if self.problem.spj_code and allowed_imports is not None:
+                # 构建一个正则表达式来检测完整限定类名
+                import re
+                # 匹配格式: new java.util.XXX, java.util.XXX.method(), 变量声明 java.util.XXX var 等
+                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)([a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
+                
+                code_lines = self.submission.code.split('\n')
+                for line_num, line in enumerate(code_lines, 1):
+                    # 跳过注释行
+                    if line.strip().startswith("//") or line.strip().startswith("/*") or line.strip().startswith("*"):
+                        continue
+                        
+                    # 查找所有完整限定类名
+                    matches = qualified_pattern.finditer(line)
+                    for match in matches:
+                        qualified_name = match.group(2)  # 获取匹配的完整限定名
+                        
+                        # 检查是否是Java标准库中的类
+                        if qualified_name.startswith("java.") or qualified_name.startswith("javax."):
+                            # 同样的检查逻辑，检查是否允许这个完整限定名
+                            allowed = False
+                            for rule in allowed_imports:
+                                if rule == "*":
+                                    allowed = True
+                                    break
+                                elif rule.endswith(".*"):
+                                    package_prefix = rule[:-1]
+                                    if qualified_name.startswith(package_prefix):
+                                        allowed = True
+                                        break
+                                elif qualified_name == rule:
+                                    allowed = True
+                                    break
+                                
+                            if not allowed:
+                                self.submission.result = JudgeStatus.COMPILE_ERROR
+                                self.submission.statistic_info = {
+                                    "err_info": f"Fully qualified class '{qualified_name}' is not allowed (line {line_num})."
+                                }
+                                self.submission.save(update_fields=["result", "statistic_info"])
+                                return
+            elif not self.problem.spj_code:
+                # 如果无 spj_code，禁止使用任何 Java 标准库
+                import re
+                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)((java|javax)\.[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
+                
+                code_lines = self.submission.code.split('\n')
+                for line_num, line in enumerate(code_lines, 1):
+                    if line.strip().startswith("//") or line.strip().startswith("/*") or line.strip().startswith("*"):
+                        continue
+                        
+                    matches = qualified_pattern.finditer(line)
+                    for match in matches:
+                        qualified_name = match.group(2)
+                        self.submission.result = JudgeStatus.COMPILE_ERROR
+                        self.submission.statistic_info = {
+                            "err_info": f"Fully qualified class '{qualified_name}' is not allowed (all imports disabled, line {line_num})."
+                        }
+                        self.submission.save(update_fields=["result", "statistic_info"])
+                        return
+        
+        
+        
+        # spj_config = {}
+        # if self.problem.spj_code:
+        #     for lang in SysOptions.spj_languages:
+        #         if lang["name"] == self.problem.spj_language:
+        #             spj_config = lang["spj"]
+        #             break
 
         if language in self.problem.template:
             template = parse_problem_template(self.problem.template[language])
@@ -144,12 +307,21 @@ class JudgeDispatcher(DispatcherBase):
             "max_cpu_time": self.problem.time_limit,
             "max_memory": 1024 * 1024 * self.problem.memory_limit,
             "test_case_id": self.problem.test_case_id,
-            "output": False,
-            "spj_version": self.problem.spj_version,
-            "spj_config": spj_config.get("config"),
-            "spj_compile_config": spj_config.get("compile"),
-            "spj_src": self.problem.spj_code,
+            
+            # "output": False,
+            # "spj_version": self.problem.spj_version,
+            # "spj_config": spj_config.get("config"),
+            # "spj_compile_config": spj_config.get("compile"),
+            # "spj_src": self.problem.spj_code,
+            
+            "output": True,  # ✅ 强制使用 `test_case_output` 进行评测
+            "spj_version": None,
+            "spj_config": None,
+            "spj_compile_config":  None,
+            "spj_src": None,
+            
             "io_mode": self.problem.io_mode
+            
         }
 
         with ChooseJudgeServer() as server:

@@ -9,6 +9,7 @@ from utils.shortcuts import rand_str
 
 
 class JudgeStatus:
+    EXPIRED = -3
     COMPILE_ERROR = -2
     WRONG_ANSWER = -1
     ACCEPTED = 0
@@ -49,6 +50,8 @@ class Submission(models.Model):
                 return False
             if self.problem.share_submission or self.shared:
                 return True
+        if user.is_super_admin():
+            return True
         return False
 
     class Meta:

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+/usr/sbin/sshd
+
 APP=/app
 DATA=/data
 
