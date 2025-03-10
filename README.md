@@ -1,4 +1,8 @@
 # 中興大學 **演算法** 課程作業繳交平台 (Deploy、Backend)
+> Frontend 的相關修改請參考 [IdONTKnowCHEK/OnlineJudgeFE-NCHU](https://github.com/IdONTKnowCHEK/OnlineJudgeFE-NCHU)
+  
+---
+
 此平台基於 [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge) 修改而成，針對 Backend 新增了幾項課程所需的功能：
 
 1. 將 container 設定 SSH 的步驟腳本化，新增在 DockerFile 中（方便修改內部檔案）
@@ -7,16 +11,16 @@
 4. 將原本的 Special Judge 功能改為透過 JSON 格式設定作業截止日期、允許的 import 及排名方式
 5. Judge result 新增 `Expired` 狀態，標示遲交作業
 
-## Deploy
+## Deploy Step
 
-- 將 private 參數 放到 `.env`
-    ```!
+1. 設定環境參數檔案 `.env`
+    ```
     JUDGE_SERVER_TOKEN=TOKEN
     BE_USERNAME=Backend-SSH-Username
     BE_PASSWORD=Backend-SSH-Password
     ```
 
-- Docker-Compose up
+2. 啟動 Docker Container
     ```sh
     $ docker-compose -p {container-name} up -d
     ```

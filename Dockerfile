@@ -2,13 +2,13 @@ FROM alpine:3.19 AS downloader
 
 WORKDIR /app
 
-# RUN <<EOS
-# set -ex
-# apk add unzip
-# wget https://github.com/QingdaoU/OnlineJudgeFE/releases/download/oj_2.7.5/dist.zip
-# unzip dist.zip
-# rm -f dist.zip
-# EOS
+RUN <<EOS
+set -ex
+apk add unzip
+wget https://github.com/IdONTKnowCHEK/OnlineJudgeFE-NCHU/releases/download/frontend/dist.zip
+unzip dist.zip
+rm -f dist.zip
+EOS
 
 FROM python:3.12-alpine
 ARG TARGETARCH
@@ -17,7 +17,6 @@ ARG TARGETVARIANT
 ENV OJ_ENV production
 WORKDIR /app
 
-# 設定用戶名和密碼變數 (Change it!!!)
 ARG USERNAME
 ARG PASSWORD
 
