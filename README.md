@@ -1,15 +1,17 @@
-# 中興大學 **演算法** 課程作業繳交平台 (Deploy、Backend)
-> Frontend 的相關修改請參考 [IdONTKnowCHEK/OnlineJudgeFE-NCHU](https://github.com/IdONTKnowCHEK/OnlineJudgeFE-NCHU)
+# NCHU **Algorithm** Course Assignment Submission Platform (Deploy, Backend)
+[ [English](README.md) | [繁體中文](README_zh.md) ]
+
+> For Frontend related modifications, please refer to [IdONTKnowCHEK/OnlineJudgeFE-NCHU](https://github.com/IdONTKnowCHEK/OnlineJudgeFE-NCHU)
 
 ---
 
-此平台基於 [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge) 修改而成，針對 Backend 新增了幾項課程所需的功能：
+This platform is modified based on [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge), with several new features added to the Backend for course requirements:
 
-1. 將 container 設定 SSH 的步驟腳本化，新增在 DockerFile 中（方便修改內部檔案）
-2. 每次作業會透過執行時間或記憶體使用量進行排序，依據排名給予作業成績
-3. 作業使用 Java 撰寫並預設禁用所有 import 功能，但可依需求特例開放
-4. 將原本的 Special Judge 功能改為透過 JSON 格式設定作業截止日期、允許的 import 及排名方式
-5. Judge result 新增 `Expired` 狀態，標示遲交作業
+1. Scripted the SSH configuration steps for containers in the DockerFile (to facilitate internal file modifications)
+2. Each assignment is ranked by execution time or memory usage, and grades are assigned based on ranking
+3. Assignments use Java with all import functions disabled by default, but can be selectively enabled as needed
+4. Modified the original Special Judge function to use JSON format for setting assignment deadlines, allowed imports, and ranking methods
+5. Added `Expired` status to Judge results to mark late submissions
 
 ## Deploy Step
 1. Clone this repo
@@ -17,49 +19,44 @@
     git clone https://github.com/Rui0828/algo_oj_backend-NCHU-CSE.git
     ```
 
-2. 設定環境參數檔案 `.env`
+2. Configure environment parameters file `.env`
     ```ini
     export JUDGE_SERVER_TOKEN=TOKEN
     export BE_USERNAME=Backend-SSH-Username
     export BE_PASSWORD=Backend-SSH-Password
     ```
 
-3. 啟動 Docker Container
+3. Start Docker Container
     ```bash
     docker-compose -p {container-name} up -d
     ```
 
-
-## 透過時間或記憶體使用量進行排序
-- 系統會自動選取每位使用者提交中時間/記憶體表現最佳的版本進行排名
+## Ranking by Execution Time or Memory Usage
+- The system automatically selects the best-performing version (time/memory) from each user's submissions for ranking
 
 ![Image](https://i.imgur.com/Kr2pufw.png)
 ![Image](https://i.imgur.com/FVAjkIp.png)
 
-
-## Java 中禁用 import（可特例開放）
-- 若繳交的程式碼中包含非允許的 import 語句，系統會回傳 `Compile Error`
+## Import Restrictions in Java (with Selective Allowances)
+- If submitted code contains non-allowed import statements, the system will return `Compile Error`
 
 ![Image](https://i.imgur.com/jinUa2m.png)
 
-
-## Special Judge 功能改為特殊設定 
-- 使用 JSON 格式進行設定
+## Special Judge Function Modified to Special Settings
+- Uses JSON format for configuration
 
 ![Image](https://i.imgur.com/oQIl1XL.png)
 
-- `"expire_time": "2025-3-28T14:00:00"` 設定作業截止時間（預設：無截止時間）  
-- `"allowed_imports": ["java.util.Scanner"]` 設定允許的 import（預設：全部禁用）  
-    - `java.util.*` 代表所有 java.util 套件可使用
-    - `*` 代表全部套件開放
-- `"rank_type": "time"` 設定排名類型，可選 `time` 或 `memory`（預設：time）
+- `"expire_time": "2025-3-28T14:00:00"` sets assignment deadline (default: no deadline)
+- `"allowed_imports": ["java.util.Scanner"]` sets allowed imports (default: all disabled)
+    - `java.util.*` means all packages in java.util are allowed
+    - `*` means all packages are allowed
+- `"rank_type": "time"` sets ranking type, options are `time` or `memory` (default: time)
 
-
-## 遲交作業顯示 `Expired` 狀態
+## Late Submissions Display `Expired` Status
 ![Image](https://i.imgur.com/p3RdJtm.png)
 
-
-## 原版 QDUOJ:
+## Original QDUOJ:
 + Backend (Django): [https://github.com/QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge)
 + Frontend (Vue): [https://github.com/QingdaoU/OnlineJudgeFE](https://github.com/QingdaoU/OnlineJudgeFE)
 + Judger Sandbox (Seccomp): [https://github.com/QingdaoU/Judger](https://github.com/QingdaoU/Judger)
