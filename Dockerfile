@@ -51,7 +51,7 @@ chmod -R 770 /app /data
 EOS
 
 COPY ./ /app/
-# COPY --from=downloader --link /app/dist/ /app/dist/
+COPY --from=downloader --link /app/dist/ /app/dist/
 RUN chmod -R u=rwX,go=rX ./ && chmod +x ./deploy/entrypoint.sh
 
 HEALTHCHECK --interval=5s CMD [ "/usr/local/bin/python3", "/app/deploy/health_check.py" ]
