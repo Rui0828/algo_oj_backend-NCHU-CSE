@@ -12,15 +12,19 @@
 5. Judge result 新增 `Expired` 狀態，標示遲交作業
 
 ## Deploy Step
+1. Clone this repo
+    ```sh
+    $ git clone https://github.com/Rui0828/algo_oj_backend-NCHU-CSE.git
+    ```
 
-1. 設定環境參數檔案 `.env`
+2. 設定環境參數檔案 `.env`
     ```
     JUDGE_SERVER_TOKEN=TOKEN
     BE_USERNAME=Backend-SSH-Username
     BE_PASSWORD=Backend-SSH-Password
     ```
 
-2. 啟動 Docker Container
+3. 啟動 Docker Container
     ```sh
     $ docker-compose -p {container-name} up -d
     ```
