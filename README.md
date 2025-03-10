@@ -1,9 +1,9 @@
 # NCHU **Algorithm** Course Assignment Submission Platform (Deploy, Backend)
-[ [English](README.md) | [繁體中文](README_zh.md) ]
-
 > For Frontend related modifications, please refer to [IdONTKnowCHEK/OnlineJudgeFE-NCHU](https://github.com/IdONTKnowCHEK/OnlineJudgeFE-NCHU)
 
 ---
+
+[ [English](README.md) | [繁體中文](README_zh.md) ]
 
 This platform is modified based on [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge), with several new features added to the Backend for course requirements:
 
