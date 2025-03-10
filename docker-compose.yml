@@ -58,6 +58,6 @@ services:
       - POSTGRES_PASSWORD=onlinejudge
       - JUDGE_SERVER_TOKEN=${JUDGE_SERVER_TOKEN}
     ports:
-      - "0.0.0.0:22:22"
+      - "0.0.0.0:2222:22"
       - "0.0.0.0:80:8000"
       - "0.0.0.0:443:1443"
