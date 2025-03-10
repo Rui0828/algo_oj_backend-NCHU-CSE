@@ -13,20 +13,20 @@
 
 ## Deploy Step
 1. Clone this repo
-    ```sh
-    $ git clone https://github.com/Rui0828/algo_oj_backend-NCHU-CSE.git
+    ```bash
+    git clone https://github.com/Rui0828/algo_oj_backend-NCHU-CSE.git
     ```
 
 2. 設定環境參數檔案 `.env`
-    ```
-    JUDGE_SERVER_TOKEN=TOKEN
-    BE_USERNAME=Backend-SSH-Username
-    BE_PASSWORD=Backend-SSH-Password
+    ```ini
+    export JUDGE_SERVER_TOKEN=TOKEN
+    export BE_USERNAME=Backend-SSH-Username
+    export BE_PASSWORD=Backend-SSH-Password
     ```
 
 3. 啟動 Docker Container
-    ```sh
-    $ docker-compose -p {container-name} up -d
+    ```bash
+    docker-compose -p {container-name} up -d
     ```
 
 
