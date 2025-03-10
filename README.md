@@ -1,5 +1,5 @@
-# 中興大學 **演算法** 課程作業繳交平台 (Backend)
-此平台基於 [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge) 修改而成，新增了幾項課程所需的功能：
+# 中興大學 **演算法** 課程作業繳交平台 (Deploy、Backend)
+此平台基於 [QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge) 修改而成，針對 Backend 新增了幾項課程所需的功能：
 
 1. 將 container 設定 SSH 的步驟腳本化，新增在 DockerFile 中（方便修改內部檔案）
 2. 每次作業會透過執行時間或記憶體使用量進行排序，依據排名給予作業成績
@@ -7,13 +7,20 @@
 4. 將原本的 Special Judge 功能改為透過 JSON 格式設定作業截止日期、允許的 import 及排名方式
 5. Judge result 新增 `Expired` 狀態，標示遲交作業
 
----
+## Deploy
 
-原版 QDUOJ:
-+ Backend (Django): [https://github.com/QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge)
-+ Frontend (Vue): [https://github.com/QingdaoU/OnlineJudgeFE](https://github.com/QingdaoU/OnlineJudgeFE)
-+ Judger Sandbox (Seccomp): [https://github.com/QingdaoU/Judger](https://github.com/QingdaoU/Judger)
-+ JudgeServer (A wrapper for Judger): [https://github.com/QingdaoU/JudgeServer](https://github.com/QingdaoU/JudgeServer)
+- 將 private 參數 放到 `.env`
+    ```!
+    JUDGE_SERVER_TOKEN=TOKEN
+    BE_USERNAME=Backend-SSH-Username
+    BE_PASSWORD=Backend-SSH-Password
+    ```
+
+- Docker-Compose up
+    ```sh
+    $ docker-compose -p {container-name} up -d
+    ```
+
 
 ## 透過時間或記憶體使用量進行排序
 - 系統會自動選取每位使用者提交中時間/記憶體表現最佳的版本進行排名
@@ -43,6 +50,12 @@
 ## 遲交作業顯示 `Expired` 狀態
 ![Image](https://i.imgur.com/p3RdJtm.png)
 
+
+## 原版 QDUOJ:
++ Backend (Django): [https://github.com/QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge)
++ Frontend (Vue): [https://github.com/QingdaoU/OnlineJudgeFE](https://github.com/QingdaoU/OnlineJudgeFE)
++ Judger Sandbox (Seccomp): [https://github.com/QingdaoU/Judger](https://github.com/QingdaoU/Judger)
++ JudgeServer (A wrapper for Judger): [https://github.com/QingdaoU/JudgeServer](https://github.com/QingdaoU/JudgeServer)
 
 ## License
 [MIT](http://opensource.org/licenses/MIT)
