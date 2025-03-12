@@ -10,7 +10,7 @@ This platform is modified based on [QingdaoU/OnlineJudge](https://github.com/Qin
 1. Scripted the SSH configuration steps for containers in the DockerFile (to facilitate internal file modifications)
 2. Each assignment is ranked by execution time or memory usage, and grades are assigned based on ranking
 3. Assignments use Java with all import functions disabled by default, but can be selectively enabled as needed
-4. Modified the original Special Judge function to use JSON format for setting assignment deadlines, allowed imports, and ranking methods
+4. Modified the original Special Judge function to use JSON format for setting assignment deadlines, allowed imports, ranking methods, late submission allowances, and late submission deadlines
 5. Added `Expired` status to Judge results to mark late submissions
 
 ## Deploy Step
@@ -45,13 +45,15 @@ This platform is modified based on [QingdaoU/OnlineJudge](https://github.com/Qin
 ## Special Judge Function Modified to Special Settings
 - Uses JSON format for configuration
 
-![Image](https://i.imgur.com/oQIl1XL.png)
+![Image](https://i.imgur.com/KdlyTRo.png)
 
 - `"expire_time": "2025-3-28T14:00:00"` sets assignment deadline (default: no deadline)
 - `"allowed_imports": ["java.util.Scanner"]` sets allowed imports (default: all disabled)
     - `java.util.*` means all packages in java.util are allowed
     - `*` means all packages are allowed
 - `"rank_type": "time"` sets ranking type, options are `time` or `memory` (default: time)
+- `"late_allowed": ["ta", "test"]` usernames allowed for late submissions
+- `"late_until":"2025-3-12T14:00:00"` extended deadline for late submissions (default: no extended deadline)
 
 ## Late Submissions Display `Expired` Status
 ![Image](https://i.imgur.com/p3RdJtm.png)

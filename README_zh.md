@@ -10,7 +10,7 @@
 1. 將 container 設定 SSH 的步驟腳本化，新增在 DockerFile 中（方便修改內部檔案）
 2. 每次作業會透過執行時間或記憶體使用量進行排序，依據排名給予作業成績
 3. 作業使用 Java 撰寫並預設禁用所有 import 功能，但可依需求特例開放
-4. 將原本的 Special Judge 功能改為透過 JSON 格式設定作業截止日期、允許的 import 及排名方式
+4. 將原本的 Special Judge 功能改為透過 JSON 格式設定作業截止日期、允許的 import 、排名方式、特殊狀況的允許遲交名單、遲交截止日期
 5. Judge result 新增 `Expired` 狀態，標示遲交作業
 
 ## Deploy Step
@@ -48,17 +48,19 @@
 ## Special Judge 功能改為特殊設定 
 - 使用 JSON 格式進行設定
 
-![Image](https://i.imgur.com/oQIl1XL.png)
+![Image](https://i.imgur.com/KdlyTRo.png)
 
 - `"expire_time": "2025-3-28T14:00:00"` 設定作業截止時間（預設：無截止時間）  
 - `"allowed_imports": ["java.util.Scanner"]` 設定允許的 import（預設：全部禁用）  
     - `java.util.*` 代表所有 java.util 套件可使用
     - `*` 代表全部套件開放
 - `"rank_type": "time"` 設定排名類型，可選 `time` 或 `memory`（預設：time）
+- `"late_allowed": ["ta", "test"]` 允許遲交的 Username
+- `"late_until":"2025-3-12T14:00:00"` 允許遲交的作業截止時間 （預設：無截止時間）  
 
 
 ## 遲交作業顯示 `Expired` 狀態
-![Image](https://i.imgur.com/p3RdJtm.png)
+![Image](https://i.imgur.com/34ntaPB.png)
 
 
 ## 原版 QDUOJ:

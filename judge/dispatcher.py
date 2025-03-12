@@ -131,15 +131,20 @@ class JudgeDispatcher(DispatcherBase):
         
         
         # ✅ 解析 spj_code 存储的 JSON 数据（如果有值）
-        expire_time, allowed_imports = None, None  # None 表示 "未设置"
+        expire_time, allowed_imports, late_allowed, late_until = None, None, None, None  # None 表示 "未设置"
 
         if self.problem.spj_code:  # ✅ 只有 SPJ 代码不为空时才进行检查
             try:
                 spj_config_data = json.loads(self.problem.spj_code)  # 解析 `spj_code` 里的 JSON
                 expire_time = spj_config_data.get("expire_time", None)  # 获取截止时间
                 allowed_imports = spj_config_data.get("allowed_imports", None)  # 获取允许的 import (可选)
+                late_allowed = spj_config_data.get("late_allowed", [])  # 获取允许遲交的用户名单
+                late_until = spj_config_data.get("late_until", None)  # 获取遲交用户的最终截止时间
             except:
-                self.problem.spj_code = None
+                self.submission.result = JudgeStatus.SYSTEM_ERROR
+                self.submission.statistic_info = {"err_info": "Setting error: Setting format error"}
+                self.submission.save(update_fields=["result", "statistic_info"])
+                return
 
         if expire_time:
             # ✅ 获取台湾时区
@@ -154,17 +159,31 @@ class JudgeDispatcher(DispatcherBase):
 
                 # ✅ 获取当前时间（台湾时区）
                 now_time = datetime.now(taipei_tz)
-
-                # ✅ 比较当前时间是否超过 `expire_time`
-                if now_time > expire_time_dt:
+                
+                # ✅ 检查提交用户是否在允许遲交名单中
+                username = User.objects.get(id=self.submission.user_id).username
+                is_late_allowed = username in late_allowed if late_allowed else False
+                
+                # ✅ 如果在遲交名单中，需要检查是否超过遲交截止时间
+                if is_late_allowed and late_until:
+                    late_until_dt = datetime.strptime(late_until, "%Y-%m-%dT%H:%M:%S")
+                    late_until_dt = taipei_tz.localize(late_until_dt)
+                    
+                    if now_time > late_until_dt:
+                        self.submission.result = JudgeStatus.EXPIRED
+                        self.submission.statistic_info = {"err_info": "Late submission deadline has passed."}
+                        self.submission.save(update_fields=["result", "statistic_info"])
+                        return
+                # ✅ 如果不在遲交名单中，使用正常截止时间
+                elif not is_late_allowed and now_time > expire_time_dt:
                     self.submission.result = JudgeStatus.EXPIRED
                     self.submission.statistic_info = {"err_info": "Submission deadline has passed."}
                     self.submission.save(update_fields=["result", "statistic_info"])
                     return
             except ValueError:
-                # ✅ 处理 `expire_time` 解析失败（格式错误）
+                # ✅ 处理 `expire_time` 或 `late_until` 解析失败（格式错误）
                 self.submission.result = JudgeStatus.SYSTEM_ERROR
-                self.submission.statistic_info = {"err_info": "Invalid expire_time format."}
+                self.submission.statistic_info = {"err_info": "Setting error: Time format error"}
                 self.submission.save(update_fields=["result", "statistic_info"])
                 return
 
