@@ -60,7 +60,7 @@
 
 
 ## 遲交作業顯示 `Expired` 狀態
-![Image](https://i.imgur.com/34ntaPB.png)
+![Image](https://i.imgur.com/p3RdJtm.png)
 
 
 ## 原版 QDUOJ:
