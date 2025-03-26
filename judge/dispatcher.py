@@ -248,7 +248,8 @@ class JudgeDispatcher(DispatcherBase):
                 # 构建一个正则表达式来检测完整限定类名
                 import re
                 # 匹配格式: new java.util.XXX, java.util.XXX.method(), 变量声明 java.util.XXX var 等
-                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)([a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
+                # 修改正则表达式以忽略可能存在的空格
+                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)([a-zA-Z][a-zA-Z0-9]*(\s*\.\s*[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
                 
                 code_lines = self.submission.code.split('\n')
                 for line_num, line in enumerate(code_lines, 1):
@@ -260,9 +261,11 @@ class JudgeDispatcher(DispatcherBase):
                     matches = qualified_pattern.finditer(line)
                     for match in matches:
                         qualified_name = match.group(2)  # 获取匹配的完整限定名
+                        # 移除所有空格以进行检查
+                        clean_qualified_name = re.sub(r'\s+', '', qualified_name)
                         
                         # 检查是否是Java标准库中的类
-                        if qualified_name.startswith("java.") or qualified_name.startswith("javax."):
+                        if clean_qualified_name.startswith("java.") or clean_qualified_name.startswith("javax."):
                             # 同样的检查逻辑，检查是否允许这个完整限定名
                             allowed = False
                             for rule in allowed_imports:
@@ -270,25 +273,26 @@ class JudgeDispatcher(DispatcherBase):
                                     allowed = True
                                     break
                                 elif rule.endswith(".*"):
-                                    package_prefix = rule[:-1]
-                                    if qualified_name.startswith(package_prefix):
+                                    package_prefix = rule[:-1]  # 去掉 `*`
+                                    if clean_qualified_name.startswith(package_prefix):
                                         allowed = True
                                         break
-                                elif qualified_name == rule:
+                                elif clean_qualified_name == rule:
                                     allowed = True
                                     break
                                 
                             if not allowed:
                                 self.submission.result = JudgeStatus.COMPILE_ERROR
                                 self.submission.statistic_info = {
-                                    "err_info": f"Fully qualified class '{qualified_name}' is not allowed (line {line_num})."
+                                    "err_info": f"Fully qualified class '{clean_qualified_name}' is not allowed (line {line_num})."
                                 }
                                 self.submission.save(update_fields=["result", "statistic_info"])
                                 return
             elif not self.problem.spj_code:
                 # 如果无 spj_code，禁止使用任何 Java 标准库
                 import re
-                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)((java|javax)\.[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
+                # 修改正则表达式以忽略可能存在的空格
+                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)((java|javax)\s*\.\s*[a-zA-Z][a-zA-Z0-9]*(\s*\.\s*[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
                 
                 code_lines = self.submission.code.split('\n')
                 for line_num, line in enumerate(code_lines, 1):
@@ -298,9 +302,11 @@ class JudgeDispatcher(DispatcherBase):
                     matches = qualified_pattern.finditer(line)
                     for match in matches:
                         qualified_name = match.group(2)
+                        # 移除所有空格以进行检查
+                        clean_qualified_name = re.sub(r'\s+', '', qualified_name)
                         self.submission.result = JudgeStatus.COMPILE_ERROR
                         self.submission.statistic_info = {
-                            "err_info": f"Fully qualified class '{qualified_name}' is not allowed (all imports disabled, line {line_num})."
+                            "err_info": f"Fully qualified class '{clean_qualified_name}' is not allowed (all imports disabled, line {line_num})."
                         }
                         self.submission.save(update_fields=["result", "statistic_info"])
                         return
