@@ -259,8 +259,8 @@ class JudgeDispatcher(DispatcherBase):
                 # 清理后的代码
                 cleaned_code = remove_comments(self.submission.code)
                 
-                # 构建正则表达式检测完整限定类名
-                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)([a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
+                # 构建正则表达式检测完整限定类名 - 修改后的表达式可以处理包名中的空格
+                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)([a-zA-Z][a-zA-Z0-9]*\s*(\.\s*[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
                 
                 # 在清理后的代码中查找所有完整限定类名
                 matches = qualified_pattern.finditer(cleaned_code)
@@ -308,8 +308,8 @@ class JudgeDispatcher(DispatcherBase):
                 # 清理后的代码
                 cleaned_code = remove_comments(self.submission.code)
                 
-                # 修改正则表达式以匹配完整限定类名
-                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)((java|javax)\.[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
+                # 修改正则表达式以匹配完整限定类名 - 处理包名中的空格
+                qualified_pattern = re.compile(r'(new\s+|^|\s+|<|,\s*)((java|javax)\s*\.\s*[a-zA-Z][a-zA-Z0-9]*(\s*\.\s*[a-zA-Z][a-zA-Z0-9]*)+)(\s*[(<]|\s+[a-zA-Z])')
                 
                 # 在清理后的代码中查找Java标准库类的使用
                 matches = qualified_pattern.finditer(cleaned_code)
@@ -319,7 +319,7 @@ class JudgeDispatcher(DispatcherBase):
                     clean_qualified_name = re.sub(r'\s+', '', qualified_name)
                     self.submission.result = JudgeStatus.COMPILE_ERROR
                     self.submission.statistic_info = {
-                        "err_info": f"Fully qualified class '{clean_qualified_name}' is not allowed (all imports disabled, line {line_num})."
+                        "err_info": f"Fully qualified class '{clean_qualified_name}' is not allowed (all imports disabled)."
                     }
                     self.submission.save(update_fields=["result", "statistic_info"])
                     return
